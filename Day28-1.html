@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>email-me</title>
+    <style>
+        ul {
+            width: 200px;
+            background-color: lightyellow;
+            padding-left: 0;
+            padding-top: 0;
+        }
+        
+        li {
+            list-style-type: none;
+            height: 30px;
+            padding-top: 5px;
+        }
+        
+        li:hover {
+            background-color: pink;
+        }
+        
+        input {
+            outline: none;
+            border: solid black;
+            border-width: 1px;
+            width: 200px;
+            height: 30px;
+            margin-bottom: 0;
+        }
+        
+        .selected {
+            background-color:cornflowerblue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <input id="email-input" type="text" onkeyup="keyinput(event)">
+        <ul id="email-sug-wrapper" class="email-sug"></ul>
+    </div>
+
+
+
+</body>
+<script>
+    var li = document.getElementsByTagName("li");
+    //上面那条语句有问题
+    function keyinput(event) {
+        var ipt = getInput();
+        ipt = htmlEncode(ipt);
+        var e = event;
+        if (e && e.keyCode == 27) { // 按Esc 
+            escKey(ipt);
+            return;
+        }
+        if (e && e.keyCode == 38) { // 按上 
+            upKey();return;
+        }
+        if (e && e.keyCode == 40) { // 按下
+            downKey();return;
+        }
+        if (e && e.keyCode == 13) { // 按enter
+            enterKey();return;
+        }
+        else {
+            document.getElementById("email-sug-wrapper").innerHTML = "";
+            document.getElementById("email-sug-wrapper").appendChild(produceList(ipt));
+            display(ipt);return;
+        }
+    }
+
+    function getInput() {
+        var ipt = document.getElementById("email-input").value;
+        return ipt.trim();
+    }
+    function produceList(ipt) {
+        var array = ['163.com', 'gmail.com', '126.com', 'qq.com', '263.net'];
+        var f = document.createDocumentFragment();
+        var count = 0;
+        while (count < array.length) {
+            var lli = document.createElement("li");
+
+            if (ipt.indexOf("@") == -1) {
+                lli.innerHTML = ipt + "@" + array[count];
+            }
+            else {
+                if (array[count].indexOf(ipt.substring(ipt.indexOf("@") + 1, ipt.length)) != -1) {
+                    var value = ipt.substring(0, ipt.indexOf("@") + 1);
+                    lli.innerHTML = value + array[count];
+                }
+            }
+
+            if (lli.innerHTML != "") {
+                f.appendChild(lli);
+                f.firstChild.classList.add("selected");
+            }
+            count++;
+        }
+        if (f.childElementCount == 0 && ipt.length != 0) {
+            for (var i = 0; i < array.length; i++) {
+                var lli = document.createElement("li");
+                lli.innerHTML = ipt.substring(0, ipt.indexOf("@") + 1) + array[i];
+                f.appendChild(lli);
+            }
+        }
+        return f;
+    }
+
+    function display(m) {
+        if (m.length == 0) hiddenMe();
+        else showMe();
+    }
+    function hiddenMe() {
+        document.getElementById("email-sug-wrapper").style.display = "none";
+    }
+    function showMe() {
+        document.getElementById("email-sug-wrapper").style.display = "block";
+    }
+    function htmlEncode(html) {
+        //1.首先动态创建一个容器标签元素，如DIV
+        var temp = document.createElement("div");
+        //2.然后将要转换的字符串设置为这个元素的innerText(ie支持)或者textContent(火狐，google支持)
+        (temp.textContent != undefined) ? (temp.textContent = html) : (temp.innerText = html);
+        //3.最后返回这个元素的innerHTML，即得到经过HTML编码转换的字符串了
+        var output = temp.innerHTML;
+        temp = null;
+        return output;
+    }
+    function htmlDecode(str) {
+        //1.首先动态创建一个容器标签元素，如DIV
+        var temp = document.createElement("div");
+        //2.然后将要转换的字符串设置为这个元素的innerHTML(ie，火狐，google都支持)
+        temp.innerHTML = str;
+        //3.最后返回这个元素的innerText(ie支持)或者textContent(火狐，google支持)，即得到经过HTML解码的字符串了。
+        var output = temp.innerText || temp.textContent;
+        temp = null;
+        return output;
+    }
+    function escKey(i) {
+        document.getElementById("email-input").select();
+    }
+    function upKey() {
+
+        var flag = false;
+        for (var i = 0; i < li.length; i++) {
+            if (li[i].style.display == "none") { continue; }
+            if (li[i].classList.contains("selected")) {
+                flag = true;
+                if (i == 0) {
+                    li[i].classList.remove("selected");
+                    li[li.length - 1].classList.add("selected");
+                    break;
+                }
+                else {
+                    li[i].classList.remove("selected");
+                    li[i - 1].classList.add("selected");
+                    break;
+                }
+            }
+        }
+        if (!flag) li[li.length - 1].classList.add("selected");
+
+
+    }
+
+    function downKey() {
+        var flag = false;
+        for (var i = 0; i < li.length; i++) {
+            if (li[i].style.display == "none") { continue; }
+            if (li[i].classList.contains("selected")) {
+                flag = true;
+                if (i == li.length - 1) {
+                    li[i].classList.remove("selected");
+                    li[0].classList.add("selected");
+                    break;
+                }
+                else {
+                    li[i].classList.remove("selected");
+                    li[i + 1].classList.add("selected");
+                    break;
+                }
+            }
+        }
+        if (!flag) li[0].classList.add("selected");
+    }
+    function enterKey() {
+        for (var i = 0; i < li.length; i++) {
+            if (li[i].classList.contains("selected")) {
+                document.getElementById("email-input").value = htmlDecode(li[i].innerHTML);
+            }
+        }
+    }
+    document.getElementById("email-sug-wrapper").onclick = function(event) {
+        if (event.target.nodeName.toLowerCase() == "li") {
+            document.getElementById("email-input").value =  htmlDecode(event.target.innerHTML);
+        }
+        document.getElementById("email-input").focus();
+    }
+
+</script>
+
+</html>
